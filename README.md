@@ -64,7 +64,7 @@ make -j$(nproc)
 
 ### 演示
 
-<video src="screenrecord.webm" controls width="100%"></video>
+[▶ 点击观看演示录屏 (WebM)](screenrecord.webm)
 
 ## 技术架构
 
