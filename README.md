@@ -1,26 +1,26 @@
 # Multi Video Player
 
-基于 VAAPI 硬件解码 + EGL DMA-BUF 零拷贝的多视频播放器，所有视频合成在单个窗口中按 grid 布局显示。
+A multi-video player based on VAAPI hardware decoding and EGL DMA-BUF zero-copy rendering. All videos are composited into a single window with a grid layout.
 
-> 本项目代码由 AI 生成，使用 OpenCode + DeepSeek V4 Pro 编写。
+> This project's code is AI-generated, written using OpenCode + DeepSeek V4 Pro.
 
-## 功能特性
+## Features
 
-- **单窗口 Grid 布局** — 多个视频在同一窗口中显示，自动排列为 2×1 / 2×2 / 3×2 等
-- **VAAPI 硬件解码** — H.264 / HEVC GPU 解码（需 Intel/AMD VAAPI 驱动）
-- **DMA-BUF 零拷贝** — 解码帧通过 DRM PRIME fd 直接导入 EGL，无需 CPU 拷贝
-- **CPU 软解回退** — 不支持的编码（如 MPEG4）自动回退 FFmpeg 软件解码
-- **双纹理策略** — 每个 Player 独立维护 DMA-BUF 和 CPU 两套纹理，按需切换
-- **无闪屏** — vsync 驱动渲染循环，无新帧时从已有纹理重绘，不会出现黑帧/绿帧
-- **PulseAudio 音频输出** — 每个视频独立音频流
+- **Single-window Grid Layout** — multiple videos displayed in one window, automatically arranged as 2×1 / 2×2 / 3×2, etc.
+- **VAAPI Hardware Decoding** — H.264 / HEVC GPU decoding (requires Intel/AMD VAAPI driver)
+- **DMA-BUF Zero-copy** — decoded frames imported directly into EGL via DRM PRIME fds, no CPU copy
+- **CPU Software Fallback** — unsupported codecs (e.g., MPEG4) automatically fall back to FFmpeg software decoding
+- **Dual Texture Strategy** — each player independently maintains DMA-BUF and CPU texture sets, switched on demand
+- **No Flicker** — vsync-driven render loop; when no new frame arrives, re-render from existing textures without black/green artifacts
+- **PulseAudio Output** — independent audio stream per video
 
-## 系统要求
+## System Requirements
 
-- Linux（Wayland 桌面环境）
-- 支持 VAAPI 的 Intel / AMD GPU
-- CMake 3.16+，C++17
+- Linux (Wayland desktop environment)
+- Intel / AMD GPU with VAAPI support
+- CMake 3.16+, C++17
 
-## 依赖安装
+## Dependencies
 
 ```bash
 sudo apt install \
@@ -32,7 +32,7 @@ sudo apt install \
     wayland-protocols pkg-config
 ```
 
-## 编译
+## Build
 
 ```bash
 mkdir build && cd build
@@ -40,33 +40,33 @@ cmake ..
 make -j$(nproc)
 ```
 
-## 使用
+## Usage
 
 ```bash
 ./multi_video_player <video1> [video2] [video3] ...
 ```
 
-示例：
+Examples:
 
 ```bash
-# 播放单个视频（1×1）
+# Play a single video (1×1)
 ./multi_video_player video.mp4
 
-# 同时播放两个视频（2×1 grid）
+# Play two videos simultaneously (2×1 grid)
 ./multi_video_player video1.mp4 video2.mp4
 
-# 四个视频（2×2 grid）
+# Four videos (2×2 grid)
 ./multi_video_player v1.mp4 v2.mp4 v3.mp4 v4.mp4
 
-# 混合软解/硬解
+# Mix hardware and software decoding
 ./multi_video_player hevc_hardware.mp4 old_mpeg4.avi
 ```
 
-### 演示
+### Demo
 
-![演示录屏](screenrecord.gif)
+![Demo Screencast](screenrecord.gif)
 
-## 技术架构
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -96,7 +96,7 @@ make -j$(nproc)
 └─────────────────────────────────────────────────────┘
 ```
 
-### 数据流
+### Data Flow
 
 ```
 video file → av_read_frame → avcodec_send_packet
@@ -111,7 +111,7 @@ video file → av_read_frame → avcodec_send_packet
                   → YUV420P shader render
 ```
 
-### 渲染管线
+### Render Pipeline
 
 ```
 for each cell in grid:
@@ -126,23 +126,23 @@ drawBorders() via glScissor + glClear(dark gray)
 scheduleFrame() → eglSwapBuffers() → awaitFrame()
 ```
 
-## 模块说明
+## Module Overview
 
-| 模块 | 职责 |
-|------|------|
-| `main.cpp` | Grid 布局、渲染循环、cell 分隔线绘制 |
-| `wayland_window` | libdecor 窗口管理、frame callback vsync 同步 |
-| `vaapi_decoder` | FFmpeg + VAAPI 解码、DMA-BUF 导出、CPU 回退 |
-| `egl_renderer` | EGL/GLES2 渲染、EGLImage DMA-BUF 导入、NV12/YUV420P 着色器 |
-| `player_window` | 解码器包装、帧缓冲（DMA-BUF + CPU 双路径） |
-| `audio_output` | PulseAudio simple API 音频播放 |
+| Module | Role |
+|--------|------|
+| `main.cpp` | Grid layout, render loop, cell border drawing |
+| `wayland_window` | libdecor window management, frame callback vsync sync |
+| `vaapi_decoder` | FFmpeg + VAAPI decoding, DMA-BUF export, CPU fallback |
+| `egl_renderer` | EGL/GLES2 rendering, EGLImage DMA-BUF import, NV12/YUV420P shaders |
+| `player_window` | Decoder wrapper, frame buffer (DMA-BUF + CPU dual path) |
+| `audio_output` | PulseAudio simple API audio playback |
 
-## 验证环境
+## Environment Verification
 
 ```bash
-vainfo                          # 检查 VAAPI 驱动支持
-ls /dev/dri/renderD*            # 检查 DRM 渲染节点
-echo $XDG_SESSION_TYPE          # 确认 Wayland 环境
+vainfo                          # Check VAAPI driver support
+ls /dev/dri/renderD*            # Check DRM render nodes
+echo $XDG_SESSION_TYPE          # Confirm Wayland environment
 ```
 
 ## License
